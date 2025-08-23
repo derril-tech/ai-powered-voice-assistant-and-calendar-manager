@@ -1,0 +1,37 @@
+version: '3.8'
+
+services:
+  dev:
+    build:
+      context: .
+      dockerfile: .devcontainer/Dockerfile
+    volumes:
+      - .:/workspace:cached
+      - node_modules:/workspace/frontend/node_modules
+      - python_cache:/workspace/backend/__pycache__
+    ports:
+      - "3000:3000"
+      - "8000:8000"
+      - "5432:5432"
+    environment:
+      - NODE_ENV=development
+      - PYTHONPATH=/workspace/backend
+    command: sleep infinity
+    depends_on:
+      - db
+
+  db:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_DB: voice_assistant
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  node_modules:
+  python_cache:
+  postgres_data:

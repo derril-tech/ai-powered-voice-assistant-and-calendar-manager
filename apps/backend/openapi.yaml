@@ -1,0 +1,1068 @@
+openapi: 3.1.0
+info:
+  title: AI Voice Assistant & Calendar Manager API
+  description: |
+    FastAPI backend for the AI-powered voice assistant and calendar manager.
+    
+    ## Features
+    - Voice processing and natural language understanding
+    - Calendar management and event scheduling
+    - AI integration with OpenAI GPT-4 and Anthropic Claude
+    - Real-time WebSocket communication
+    - User authentication and authorization
+    
+    ## Authentication
+    This API uses JWT Bearer token authentication. Include the token in the Authorization header:
+    ```
+    Authorization: Bearer <your-jwt-token>
+    ```
+    
+    ## Rate Limiting
+    - 100 requests per minute for authenticated users
+    - 10 requests per minute for unauthenticated users
+    
+  version: 1.0.0
+  contact:
+    name: AI Voice Assistant Team
+    email: support@aivoiceassistant.com
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+
+servers:
+  - url: http://localhost:8000
+    description: Development server
+  - url: https://api.aivoiceassistant.com
+    description: Production server
+
+security:
+  - BearerAuth: []
+
+paths:
+  /health:
+    get:
+      summary: Health Check
+      description: Check if the API is running and healthy
+      tags:
+        - Health
+      responses:
+        '200':
+          description: API is healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "healthy"
+                  version:
+                    type: string
+                    example: "1.0.0"
+                  timestamp:
+                    type: number
+                    example: 1642234567.123
+
+  /api/v1/auth/login:
+    post:
+      summary: User Login
+      description: Authenticate user and return JWT token
+      tags:
+        - Authentication
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+        '401':
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/v1/auth/register:
+    post:
+      summary: User Registration
+      description: Register a new user account
+      tags:
+        - Authentication
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterRequest'
+      responses:
+        '201':
+          description: User created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserResponse'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/v1/auth/refresh:
+    post:
+      summary: Refresh Token
+      description: Refresh JWT access token using refresh token
+      tags:
+        - Authentication
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Token refreshed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenResponse'
+        '401':
+          description: Invalid refresh token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/v1/auth/profile:
+    get:
+      summary: Get User Profile
+      description: Get current user's profile information
+      tags:
+        - Authentication
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: User profile retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/v1/calendar/events:
+    get:
+      summary: Get Events
+      description: Retrieve calendar events for the authenticated user
+      tags:
+        - Calendar
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: start_date
+          in: query
+          description: Start date for event range (ISO 8601)
+          required: false
+          schema:
+            type: string
+            format: date-time
+        - name: end_date
+          in: query
+          description: End date for event range (ISO 8601)
+          required: false
+          schema:
+            type: string
+            format: date-time
+        - name: calendar_id
+          in: query
+          description: Filter by specific calendar ID
+          required: false
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Events retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Event'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    post:
+      summary: Create Event
+      description: Create a new calendar event
+      tags:
+        - Calendar
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateEventRequest'
+      responses:
+        '201':
+          description: Event created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    $ref: '#/components/schemas/Event'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/v1/calendar/events/{event_id}:
+    get:
+      summary: Get Event
+      description: Retrieve a specific calendar event
+      tags:
+        - Calendar
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: event_id
+          in: path
+          required: true
+          description: Event ID
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Event retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    $ref: '#/components/schemas/Event'
+        '404':
+          description: Event not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    put:
+      summary: Update Event
+      description: Update an existing calendar event
+      tags:
+        - Calendar
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: event_id
+          in: path
+          required: true
+          description: Event ID
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateEventRequest'
+      responses:
+        '200':
+          description: Event updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    $ref: '#/components/schemas/Event'
+        '404':
+          description: Event not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    delete:
+      summary: Delete Event
+      description: Delete a calendar event
+      tags:
+        - Calendar
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: event_id
+          in: path
+          required: true
+          description: Event ID
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: Event deleted successfully
+        '404':
+          description: Event not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/v1/voice/process:
+    post:
+      summary: Process Voice Command
+      description: Process voice input and return AI-generated response
+      tags:
+        - Voice
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VoiceProcessingRequest'
+      responses:
+        '200':
+          description: Voice command processed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VoiceProcessingResponse'
+        '400':
+          description: Invalid voice data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/v1/voice/history:
+    get:
+      summary: Get Voice Command History
+      description: Retrieve user's voice command history
+      tags:
+        - Voice
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: limit
+          in: query
+          description: Number of commands to retrieve
+          required: false
+          schema:
+            type: integer
+            default: 50
+            minimum: 1
+            maximum: 100
+        - name: offset
+          in: query
+          description: Number of commands to skip
+          required: false
+          schema:
+            type: integer
+            default: 0
+            minimum: 0
+      responses:
+        '200':
+          description: Voice command history retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/VoiceCommand'
+                  pagination:
+                    $ref: '#/components/schemas/Pagination'
+
+  /api/v1/notifications:
+    get:
+      summary: Get Notifications
+      description: Retrieve user's notifications
+      tags:
+        - Notifications
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: unread_only
+          in: query
+          description: Return only unread notifications
+          required: false
+          schema:
+            type: boolean
+            default: false
+        - name: limit
+          in: query
+          description: Number of notifications to retrieve
+          required: false
+          schema:
+            type: integer
+            default: 20
+            minimum: 1
+            maximum: 100
+      responses:
+        '200':
+          description: Notifications retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Notification'
+                  pagination:
+                    $ref: '#/components/schemas/Pagination'
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    LoginRequest:
+      type: object
+      required:
+        - email
+        - password
+      properties:
+        email:
+          type: string
+          format: email
+          description: User's email address
+          example: "user@example.com"
+        password:
+          type: string
+          minLength: 8
+          description: User's password
+          example: "securepassword123"
+
+    LoginResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: object
+          properties:
+            access_token:
+              type: string
+              description: JWT access token
+              example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+            refresh_token:
+              type: string
+              description: JWT refresh token
+              example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+            token_type:
+              type: string
+              example: "bearer"
+            expires_in:
+              type: integer
+              description: Token expiration time in seconds
+              example: 3600
+            user:
+              $ref: '#/components/schemas/User'
+
+    RegisterRequest:
+      type: object
+      required:
+        - email
+        - password
+        - name
+      properties:
+        email:
+          type: string
+          format: email
+          description: User's email address
+          example: "user@example.com"
+        password:
+          type: string
+          minLength: 8
+          description: User's password
+          example: "securepassword123"
+        name:
+          type: string
+          minLength: 1
+          description: User's full name
+          example: "John Doe"
+
+    TokenResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: object
+          properties:
+            access_token:
+              type: string
+              description: New JWT access token
+              example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+            token_type:
+              type: string
+              example: "bearer"
+            expires_in:
+              type: integer
+              description: Token expiration time in seconds
+              example: 3600
+
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: User's unique identifier
+          example: "123e4567-e89b-12d3-a456-426614174000"
+        email:
+          type: string
+          format: email
+          description: User's email address
+          example: "user@example.com"
+        name:
+          type: string
+          description: User's full name
+          example: "John Doe"
+        avatar:
+          type: string
+          format: uri
+          description: User's avatar URL
+          example: "https://example.com/avatar.jpg"
+        created_at:
+          type: string
+          format: date-time
+          description: User creation timestamp
+          example: "2024-01-01T00:00:00Z"
+        updated_at:
+          type: string
+          format: date-time
+          description: User last update timestamp
+          example: "2024-01-15T12:00:00Z"
+
+    UserResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          $ref: '#/components/schemas/User'
+
+    Event:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Event's unique identifier
+          example: "123e4567-e89b-12d3-a456-426614174000"
+        title:
+          type: string
+          description: Event title
+          example: "Team Meeting"
+        description:
+          type: string
+          description: Event description
+          example: "Weekly team standup meeting"
+        start_time:
+          type: string
+          format: date-time
+          description: Event start time
+          example: "2024-01-15T09:00:00Z"
+        end_time:
+          type: string
+          format: date-time
+          description: Event end time
+          example: "2024-01-15T10:00:00Z"
+        location:
+          type: string
+          description: Event location
+          example: "Conference Room A"
+        calendar_id:
+          type: string
+          format: uuid
+          description: Associated calendar ID
+          example: "123e4567-e89b-12d3-a456-426614174000"
+        user_id:
+          type: string
+          format: uuid
+          description: Event owner's user ID
+          example: "123e4567-e89b-12d3-a456-426614174000"
+        attendees:
+          type: array
+          items:
+            $ref: '#/components/schemas/Attendee'
+        reminders:
+          type: array
+          items:
+            $ref: '#/components/schemas/Reminder'
+        status:
+          type: string
+          enum: [confirmed, tentative, cancelled]
+          description: Event status
+          example: "confirmed"
+        priority:
+          type: string
+          enum: [low, medium, high, urgent]
+          description: Event priority
+          example: "medium"
+        tags:
+          type: array
+          items:
+            type: string
+          description: Event tags
+          example: ["work", "meeting"]
+        created_at:
+          type: string
+          format: date-time
+          description: Event creation timestamp
+          example: "2024-01-10T08:00:00Z"
+        updated_at:
+          type: string
+          format: date-time
+          description: Event last update timestamp
+          example: "2024-01-15T12:00:00Z"
+
+    CreateEventRequest:
+      type: object
+      required:
+        - title
+        - start_time
+        - end_time
+      properties:
+        title:
+          type: string
+          minLength: 1
+          description: Event title
+          example: "Team Meeting"
+        description:
+          type: string
+          description: Event description
+          example: "Weekly team standup meeting"
+        start_time:
+          type: string
+          format: date-time
+          description: Event start time
+          example: "2024-01-15T09:00:00Z"
+        end_time:
+          type: string
+          format: date-time
+          description: Event end time
+          example: "2024-01-15T10:00:00Z"
+        location:
+          type: string
+          description: Event location
+          example: "Conference Room A"
+        calendar_id:
+          type: string
+          format: uuid
+          description: Associated calendar ID
+          example: "123e4567-e89b-12d3-a456-426614174000"
+        attendees:
+          type: array
+          items:
+            type: string
+            format: email
+          description: List of attendee email addresses
+          example: ["user1@example.com", "user2@example.com"]
+        reminders:
+          type: array
+          items:
+            $ref: '#/components/schemas/ReminderRequest'
+        status:
+          type: string
+          enum: [confirmed, tentative, cancelled]
+          description: Event status
+          example: "confirmed"
+        priority:
+          type: string
+          enum: [low, medium, high, urgent]
+          description: Event priority
+          example: "medium"
+        tags:
+          type: array
+          items:
+            type: string
+          description: Event tags
+          example: ["work", "meeting"]
+
+    UpdateEventRequest:
+      type: object
+      properties:
+        title:
+          type: string
+          minLength: 1
+          description: Event title
+          example: "Team Meeting"
+        description:
+          type: string
+          description: Event description
+          example: "Weekly team standup meeting"
+        start_time:
+          type: string
+          format: date-time
+          description: Event start time
+          example: "2024-01-15T09:00:00Z"
+        end_time:
+          type: string
+          format: date-time
+          description: Event end time
+          example: "2024-01-15T10:00:00Z"
+        location:
+          type: string
+          description: Event location
+          example: "Conference Room A"
+        attendees:
+          type: array
+          items:
+            type: string
+            format: email
+          description: List of attendee email addresses
+          example: ["user1@example.com", "user2@example.com"]
+        reminders:
+          type: array
+          items:
+            $ref: '#/components/schemas/ReminderRequest'
+        status:
+          type: string
+          enum: [confirmed, tentative, cancelled]
+          description: Event status
+          example: "confirmed"
+        priority:
+          type: string
+          enum: [low, medium, high, urgent]
+          description: Event priority
+          example: "medium"
+        tags:
+          type: array
+          items:
+            type: string
+          description: Event tags
+          example: ["work", "meeting"]
+
+    Attendee:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Attendee's unique identifier
+          example: "123e4567-e89b-12d3-a456-426614174000"
+        email:
+          type: string
+          format: email
+          description: Attendee's email address
+          example: "user@example.com"
+        name:
+          type: string
+          description: Attendee's name
+          example: "John Doe"
+        response:
+          type: string
+          enum: [accepted, declined, pending, tentative]
+          description: Attendee's response to the event
+          example: "accepted"
+
+    Reminder:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Reminder's unique identifier
+          example: "123e4567-e89b-12d3-a456-426614174000"
+        event_id:
+          type: string
+          format: uuid
+          description: Associated event ID
+          example: "123e4567-e89b-12d3-a456-426614174000"
+        time:
+          type: string
+          format: date-time
+          description: Reminder time
+          example: "2024-01-15T08:45:00Z"
+        type:
+          type: string
+          enum: [email, push, sms, voice]
+          description: Reminder type
+          example: "push"
+        sent:
+          type: boolean
+          description: Whether the reminder has been sent
+          example: false
+
+    ReminderRequest:
+      type: object
+      required:
+        - time
+        - type
+      properties:
+        time:
+          type: string
+          format: date-time
+          description: Reminder time
+          example: "2024-01-15T08:45:00Z"
+        type:
+          type: string
+          enum: [email, push, sms, voice]
+          description: Reminder type
+          example: "push"
+
+    VoiceProcessingRequest:
+      type: object
+      required:
+        - audio_data
+        - user_id
+      properties:
+        audio_data:
+          type: string
+          description: Base64 encoded audio data
+          example: "UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBSuBzvLZiTYIG2m98OScTgwOUarm7blmGgU7k9n1unEiBC13yO/eizEIHWq+8+OWT..."
+        user_id:
+          type: string
+          format: uuid
+          description: User's unique identifier
+          example: "123e4567-e89b-12d3-a456-426614174000"
+        session_id:
+          type: string
+          description: Voice session identifier
+          example: "session_123"
+
+    VoiceProcessingResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: object
+          properties:
+            text:
+              type: string
+              description: Transcribed text from audio
+              example: "Schedule a meeting with the team for tomorrow at 2pm"
+            intent:
+              type: string
+              description: Detected intent from the voice command
+              example: "schedule_meeting"
+            confidence:
+              type: number
+              format: float
+              minimum: 0
+              maximum: 1
+              description: Confidence score for the transcription and intent
+              example: 0.92
+            entities:
+              type: object
+              description: Extracted entities from the voice command
+              example:
+                attendees: ["team"]
+                time: "tomorrow at 2pm"
+                duration: "1 hour"
+            suggested_actions:
+              type: array
+              items:
+                type: string
+              description: Suggested actions based on the voice command
+              example: ["Create calendar event", "Send invitations", "Set reminder"]
+
+    VoiceCommand:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Voice command's unique identifier
+          example: "123e4567-e89b-12d3-a456-426614174000"
+        user_id:
+          type: string
+          format: uuid
+          description: User's unique identifier
+          example: "123e4567-e89b-12d3-a456-426614174000"
+        command:
+          type: string
+          description: Original voice command text
+          example: "Schedule a meeting with the team for tomorrow at 2pm"
+        intent:
+          type: string
+          description: Detected intent
+          example: "schedule_meeting"
+        confidence:
+          type: number
+          format: float
+          minimum: 0
+          maximum: 1
+          description: Confidence score
+          example: 0.92
+        entities:
+          type: array
+          items:
+            type: object
+            properties:
+              type:
+                type: string
+                description: Entity type
+                example: "attendee"
+              value:
+                type: string
+                description: Entity value
+                example: "team"
+              confidence:
+                type: number
+                format: float
+                description: Entity confidence score
+                example: 0.9
+        created_at:
+          type: string
+          format: date-time
+          description: Command creation timestamp
+          example: "2024-01-15T08:30:00Z"
+
+    Notification:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Notification's unique identifier
+          example: "123e4567-e89b-12d3-a456-426614174000"
+        user_id:
+          type: string
+          format: uuid
+          description: User's unique identifier
+          example: "123e4567-e89b-12d3-a456-426614174000"
+        title:
+          type: string
+          description: Notification title
+          example: "Meeting Reminder"
+        message:
+          type: string
+          description: Notification message
+          example: "Team Standup Meeting starts in 15 minutes"
+        type:
+          type: string
+          enum: [info, success, warning, error]
+          description: Notification type
+          example: "info"
+        read:
+          type: boolean
+          description: Whether the notification has been read
+          example: false
+        created_at:
+          type: string
+          format: date-time
+          description: Notification creation timestamp
+          example: "2024-01-15T08:45:00Z"
+
+    Pagination:
+      type: object
+      properties:
+        total:
+          type: integer
+          description: Total number of items
+          example: 100
+        limit:
+          type: integer
+          description: Number of items per page
+          example: 20
+        offset:
+          type: integer
+          description: Number of items skipped
+          example: 0
+        has_more:
+          type: boolean
+          description: Whether there are more items available
+          example: true
+
+    ErrorResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        error:
+          type: object
+          properties:
+            code:
+              type: string
+              description: Error code
+              example: "validation_error"
+            message:
+              type: string
+              description: Error message
+              example: "Invalid input data"
+            details:
+              type: object
+              description: Additional error details
+              example:
+                field: "email"
+                issue: "Invalid email format"
+
+tags:
+  - name: Health
+    description: Health check endpoints
+  - name: Authentication
+    description: User authentication and authorization
+  - name: Calendar
+    description: Calendar and event management
+  - name: Voice
+    description: Voice processing and commands
+  - name: Notifications
+    description: User notifications and alerts
