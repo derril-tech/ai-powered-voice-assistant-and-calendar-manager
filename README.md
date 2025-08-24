@@ -99,6 +99,166 @@ ai-powered-voice-assistant-and-calendar-manager/
 - **Task Queue**: Celery with Redis broker
 - **Testing**: Pytest with async support
 
+## 🤖 AI/ML Framework Architecture
+
+### **Primary AI Framework: LangChain**
+**Purpose**: Core AI orchestration and workflow management
+**Use Cases**:
+- **Natural Language Processing**: Intent recognition and entity extraction from voice commands
+- **Conversation Management**: Context-aware dialogue handling and memory
+- **Tool Integration**: Calendar operations, email sending, notification triggers
+- **Chain Orchestration**: Complex multi-step workflows (voice → intent → action → response)
+- **Prompt Management**: Dynamic prompt generation and template management
+
+**Implementation**:
+```python
+# Voice command processing chain
+voice_chain = LLMChain(
+    llm=openai_gpt4,
+    prompt=voice_intent_prompt,
+    output_parser=IntentParser()
+)
+
+# Calendar operation chain
+calendar_chain = SequentialChain([
+    availability_checker,
+    conflict_resolver,
+    event_creator
+])
+```
+
+### **Secondary Framework: LangGraph (Future Enhancement)**
+**Purpose**: Advanced workflow orchestration for complex multi-agent scenarios
+**Use Cases**:
+- **Multi-Agent Coordination**: Calendar agent + Voice agent + Notification agent
+- **Stateful Workflows**: Complex meeting scheduling with multiple participants
+- **Conditional Logic**: Dynamic routing based on user preferences and context
+- **Parallel Processing**: Simultaneous calendar sync and notification sending
+
+**Implementation** (Planned):
+```python
+# Multi-agent workflow graph
+workflow = StateGraph(MeetingSchedulerState)
+
+workflow.add_node("voice_processor", voice_agent)
+workflow.add_node("calendar_manager", calendar_agent)
+workflow.add_node("notification_sender", notification_agent)
+
+workflow.add_edge("voice_processor", "calendar_manager")
+workflow.add_edge("calendar_manager", "notification_sender")
+```
+
+### **RAG (Retrieval-Augmented Generation) Implementation**
+**Purpose**: Context-aware responses using user's calendar history and preferences
+**Use Cases**:
+- **Personalized Suggestions**: "Schedule a meeting like the one with John last week"
+- **Historical Context**: "What was discussed in my last team meeting?"
+- **Preference Learning**: "I usually prefer morning meetings on Tuesdays"
+- **Meeting Intelligence**: "Summarize my meetings from this month"
+
+**Implementation**:
+```python
+# Vector database for user context
+user_context_store = ChromaDB(
+    collection_name="user_context",
+    embedding_function=openai_embeddings
+)
+
+# RAG chain for contextual responses
+rag_chain = RetrievalQA.from_chain_type(
+    llm=claude_3_sonnet,
+    chain_type="stuff",
+    retriever=user_context_store.as_retriever()
+)
+```
+
+### **CrewAI (Alternative for Complex Scenarios)**
+**Purpose**: Multi-agent collaboration for enterprise-level scheduling
+**Use Cases**:
+- **Enterprise Scheduling**: Multiple stakeholders with complex constraints
+- **Resource Management**: Room booking, equipment allocation, travel coordination
+- **Compliance Checking**: Meeting policy enforcement, security clearance
+- **Stakeholder Coordination**: Automated negotiation between participants
+
+**Implementation** (Enterprise Edition):
+```python
+# Multi-agent crew for complex scheduling
+scheduling_crew = Crew(
+    agents=[
+        CalendarAgent(role="Primary Scheduler"),
+        AvailabilityAgent(role="Availability Checker"),
+        ConflictAgent(role="Conflict Resolver"),
+        NotificationAgent(role="Communication Manager")
+    ],
+    tasks=[
+        Task("Check all participant availability"),
+        Task("Resolve scheduling conflicts"),
+        Task("Send meeting invitations"),
+        Task("Update calendar systems")
+    ]
+)
+```
+
+### **Framework Selection Matrix**
+
+| Use Case | Primary Framework | Alternative | When to Use |
+|----------|------------------|-------------|-------------|
+| **Voice Command Processing** | LangChain | - | Always |
+| **Simple Calendar Operations** | LangChain | - | Always |
+| **Complex Multi-Step Workflows** | LangChain | LangGraph | LangGraph for stateful workflows |
+| **Context-Aware Responses** | RAG + LangChain | - | Always |
+| **Multi-Agent Coordination** | LangGraph | CrewAI | CrewAI for enterprise scenarios |
+| **Personalization** | RAG + LangChain | - | Always |
+| **Meeting Intelligence** | RAG + LangChain | - | Always |
+
+### **AI Model Routing Strategy**
+
+#### **Primary Models**
+- **GPT-4**: Complex reasoning, creative tasks, natural language generation
+- **Claude 3 Sonnet**: Analytical tasks, structured data processing, code generation
+- **Whisper**: Speech-to-text transcription
+- **ElevenLabs**: Text-to-speech synthesis
+
+#### **Fallback Strategy**
+```python
+# Model routing with fallbacks
+def route_ai_request(task_type: str, complexity: str):
+    if task_type == "voice_processing":
+        return openai_whisper
+    elif task_type == "reasoning" and complexity == "high":
+        return openai_gpt4
+    elif task_type == "analysis":
+        return claude_3_sonnet
+    else:
+        return claude_3_haiku  # Cost-effective fallback
+```
+
+### **Performance Optimization**
+
+#### **Caching Strategy**
+- **Embedding Cache**: Store frequently used embeddings in Redis
+- **Response Cache**: Cache common voice command responses
+- **Context Cache**: Store user context for faster retrieval
+
+#### **Async Processing**
+- **Background Tasks**: Use Celery for non-blocking AI operations
+- **Streaming Responses**: Real-time voice processing with WebSockets
+- **Batch Processing**: Group similar operations for efficiency
+
+### **Security & Privacy**
+
+#### **Data Handling**
+- **Voice Data**: Process and discard immediately, never store raw audio
+- **Context Data**: Encrypt user context in vector database
+- **API Keys**: Rotate regularly, use environment variables
+- **Audit Logging**: Log all AI interactions for compliance
+
+#### **Model Security**
+- **Input Validation**: Sanitize all inputs before AI processing
+- **Output Filtering**: Validate AI responses before user exposure
+- **Rate Limiting**: Prevent AI API abuse
+- **Error Handling**: Graceful degradation when AI services fail
+
 ## 📚 Documentation
 
 ### 1. **REPO_MAP.md**
@@ -127,6 +287,26 @@ Frontend-specific development prompts with:
 - Performance optimization techniques
 - Accessibility implementation patterns
 - Step-by-step development phases
+
+### 4. **AI_FRAMEWORK_ARCHITECTURE.md**
+Comprehensive AI/ML framework documentation including:
+- LangChain as primary AI orchestration framework
+- RAG implementation for context-aware responses
+- LangGraph for advanced multi-agent workflows
+- CrewAI for enterprise-level scheduling
+- AI model routing and fallback strategies
+- Performance optimization and security considerations
+
+### 5. **CLAUDE.md** ⭐ **SINGLE SOURCE OF TRUTH**
+**Location**: `docs/CLAUDE.md` - This is the authoritative Claude Code development guide
+Complete development guide for Claude Code including:
+- 80/20 development strategy and responsibilities
+- Infrastructure team vs Claude Code tasks
+- Implementation roadmap and success criteria
+- AI/ML framework architecture and implementation
+- Development guidelines and best practices
+- Failure-mode playbook and troubleshooting
+- **IMPORTANT**: Always refer to `docs/CLAUDE.md` as the main guide
 
 ## 🎯 Claude Code Integration
 

@@ -1,5 +1,6 @@
 'use client'
 
+// START CLAUDE_EDITABLE
 import { useState } from 'react'
 import { Calendar, Clock, Mic, Settings, User } from 'lucide-react'
 import { VoiceAssistant } from './voice-assistant'
@@ -11,6 +12,7 @@ import { Sidebar } from './sidebar'
 import { Header } from './header'
 import { Button } from './ui/button'
 import { cn } from '@/lib/utils'
+// END CLAUDE_EDITABLE
 
 export function Dashboard() {
   const [activeView, setActiveView] = useState<'calendar' | 'voice' | 'chat' | 'insights' | 'settings'>('calendar')

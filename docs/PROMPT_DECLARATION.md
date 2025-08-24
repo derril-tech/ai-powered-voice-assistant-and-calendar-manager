@@ -247,6 +247,211 @@ feat(voice): add calendar event creation via voice command
 4. Validate database connections
 5. Check browser console errors
 
+## UX Guidelines & Design System
+
+### Voice-First Design Principles
+- **Progressive Enhancement**: Ensure functionality works without voice
+- **Visual Feedback**: Always provide visual confirmation of voice actions
+- **Error Recovery**: Clear feedback and recovery options for failed commands
+- **Accessibility**: Voice interfaces must be accessible to users with disabilities
+- **Context Awareness**: Maintain conversation context across interactions
+
+### Interaction States
+- **Loading**: Show spinner with descriptive text during voice processing
+- **Success**: Green checkmark with confirmation message
+- **Error**: Red error icon with clear error message and retry option
+- **Confidence**: Show confidence meter for voice recognition accuracy
+- **Processing**: Real-time waveform visualization during recording
+
+### Accessibility Requirements
+- **WCAG 2.1 AA Compliance**: All components must meet accessibility standards
+- **Keyboard Navigation**: Full keyboard accessibility for all features
+- **Screen Reader Support**: Proper ARIA labels and semantic HTML
+- **Color Contrast**: Minimum 4.5:1 contrast ratio for text
+- **Focus Management**: Clear focus indicators and logical tab order
+
+### Design Tokens
+- **Colors**: Use tokens from `packages/ui/src/tokens.ts`
+- **Spacing**: Consistent spacing scale (4px base unit)
+- **Typography**: Inter font family with defined size scale
+- **Shadows**: Consistent elevation system
+- **Border Radius**: Standardized corner radius values
+
+## Performance Budgets & Constraints
+
+### Frontend Performance
+- **Bundle Size**: < 500KB gzipped for initial load
+- **First Contentful Paint**: < 1.5 seconds
+- **Largest Contentful Paint**: < 2.5 seconds
+- **Cumulative Layout Shift**: < 0.1
+- **Time to Interactive**: < 3.5 seconds
+
+### Backend Performance
+- **API Response Time**: < 200ms (p95)
+- **Database Queries**: < 50ms (p95)
+- **Voice Processing**: < 2 seconds end-to-end
+- **WebSocket Latency**: < 100ms for real-time features
+- **Concurrent Users**: Support 1000+ simultaneous users
+
+### Memory & Resource Usage
+- **Frontend Memory**: < 100MB per tab
+- **Backend Memory**: < 512MB per instance
+- **Database Connections**: < 100 concurrent connections
+- **Redis Memory**: < 1GB for caching and sessions
+
+## Security Constraints & Compliance
+
+### Authentication & Authorization
+- **JWT Tokens**: 15-minute access tokens, 7-day refresh tokens
+- **Device Binding**: Token binding to prevent token theft
+- **Rate Limiting**: 100 requests/minute for authenticated users
+- **Session Management**: Secure session storage with Redis
+- **Multi-factor Authentication**: Optional 2FA for enterprise users
+
+### Data Protection
+- **Encryption**: AES-256 at rest, TLS 1.3 in transit
+- **Voice Data**: Never store raw audio, process and discard immediately
+- **Calendar Data**: Encrypt sensitive calendar information
+- **PII Handling**: Auto-redaction of PII in logs
+- **Data Residency**: Support for US/EU data residency options
+
+### API Security
+- **Input Validation**: Comprehensive validation for all inputs
+- **SQL Injection Prevention**: Parameterized queries only
+- **CORS Configuration**: Strict CORS policy
+- **HTTPS Enforcement**: All communications over HTTPS
+- **Security Headers**: Implement security headers (HSTS, CSP, etc.)
+
+### Compliance Requirements
+- **GDPR/CCPA**: Privacy controls and data portability
+- **SOC 2**: Security controls and audit trails
+- **HIPAA**: Optional healthcare compliance features
+- **Enterprise SSO**: SAML/OIDC integration for enterprise customers
+
+## Security & Compliance Table
+
+| Security Aspect | Implementation | Compliance | Monitoring |
+|----------------|----------------|------------|------------|
+| **Authentication** | JWT + refresh tokens, device binding | OAuth 2.0, OIDC | Token usage, failed attempts |
+| **Authorization** | Role-based access control (RBAC) | Principle of least privilege | Access logs, permission changes |
+| **Data Encryption** | AES-256 at rest, TLS 1.3 in transit | FIPS 140-2 | Encryption status, key rotation |
+| **Voice Data** | Process and discard, no storage | GDPR Article 5 | Processing logs, data flow |
+| **Calendar Data** | Encrypted storage, secure sync | SOC 2 Type II | Sync status, access patterns |
+| **PII Handling** | Auto-redaction in logs, consent management | GDPR, CCPA | PII detection, consent tracking |
+| **API Security** | Rate limiting, input validation, CORS | OWASP Top 10 | Security headers, attack detection |
+| **Audit Logging** | Comprehensive audit trail | SOC 2, GDPR | Log integrity, retention compliance |
+| **Data Residency** | US/EU deployment options | GDPR Chapter 5 | Data location, transfer tracking |
+| **Backup & Recovery** | Encrypted backups, disaster recovery | Business continuity | Backup success, recovery testing |
+
+## Testing Expectations
+
+### Unit Testing
+- **Coverage**: > 80% code coverage
+- **Frontend**: Jest + React Testing Library
+- **Backend**: pytest with async support
+- **Mocking**: Comprehensive mocking of external services
+- **Edge Cases**: Test error conditions and edge cases
+
+### Integration Testing
+- **API Testing**: Test all endpoints with real database
+- **Database Testing**: Test migrations and data integrity
+- **Voice Processing**: Test voice recognition accuracy
+- **Calendar Integration**: Test calendar provider APIs
+- **WebSocket Testing**: Test real-time communication
+
+### End-to-End Testing
+- **Critical Paths**: Test complete user journeys
+- **Cross-browser**: Test in Chrome, Firefox, Safari, Edge
+- **Mobile Testing**: Test responsive design on mobile devices
+- **Accessibility Testing**: Automated and manual accessibility testing
+- **Performance Testing**: Load testing for concurrent users
+
+## Ambiguity Resolution & Red-Team Pass
+
+### Clarified Terms & Definitions
+- **"Voice-First"**: Voice as primary interface, but always with visual alternatives
+- **"Real-time"**: < 100ms latency for WebSocket, < 2s for voice processing
+- **"AI Integration"**: GPT-4 for reasoning, Claude for analysis, LangChain for orchestration
+- **"Calendar Sync"**: Bidirectional sync with Google, Outlook, Apple Calendar
+- **"Meeting Intelligence"**: Automated notes, action items, summaries, follow-ups
+- **"Proactive Suggestions"**: AI-driven scheduling optimizations and time management
+- **"Enterprise Features"**: SSO/SAML, admin console, data residency, compliance
+
+### Red-Team Security Validation
+- **Input Validation**: All user inputs validated against schemas, no raw SQL
+- **Authentication**: JWT tokens with short expiry, refresh token rotation
+- **Authorization**: Role-based access, principle of least privilege
+- **Data Protection**: Encryption at rest and in transit, PII redaction
+- **API Security**: Rate limiting, CORS, security headers, HTTPS only
+- **Voice Security**: No audio storage, process and discard immediately
+- **Calendar Security**: OAuth 2.0 flows, secure token storage
+- **Audit Logging**: Comprehensive logs for compliance and security monitoring
+
+### Edge Cases & Error Handling
+- **Voice Recognition Failure**: Fallback to Whisper API, manual input option
+- **Calendar Sync Failure**: Retry logic, conflict resolution, user notification
+- **AI Service Unavailable**: Circuit breakers, graceful degradation
+- **Network Issues**: Offline mode, sync when reconnected
+- **Browser Compatibility**: Progressive enhancement, feature detection
+- **Accessibility**: Screen reader support, keyboard navigation, high contrast
+
+## Response Schema & Examples
+
+### Claude Response Format
+**ALWAYS** respond with this exact format:
+
+```diff
+--- a/apps/frontend/src/components/example.tsx
++++ b/apps/frontend/src/components/example.tsx
+@@ -10,6 +10,7 @@ export function ExampleComponent() {
+   const handleAction = async () => {
+     try {
+       setLoading(true);
++      const result = await apiCall();
++      setData(result);
+       setLoading(false);
+     } catch (error) {
+       setError(error.message);
+     }
+   };
+```
+
+**Commit Message**: `feat(component): add API integration with error handling`
+
+### Example Prompt & Ideal Response
+
+**User Prompt**: "Add voice command processing to the calendar view component"
+
+**Ideal Claude Response**:
+```diff
+--- a/apps/frontend/src/components/calendar-view.tsx
++++ b/apps/frontend/src/components/calendar-view.tsx
+@@ -15,6 +15,7 @@ export function CalendarView() {
+   const [events, setEvents] = useState<Event[]>([]);
++  const [voiceCommand, setVoiceCommand] = useState<string>('');
++  const [isProcessingVoice, setIsProcessingVoice] = useState(false);
+
+   useEffect(() => {
+     loadEvents();
+   }, []);
+
++  const handleVoiceCommand = async (command: string) => {
++    try {
++      setIsProcessingVoice(true);
++      const response = await processVoiceCommand(command);
++      if (response.intent === 'create_event') {
++        await createEventFromVoice(response.entities);
++      }
++      setIsProcessingVoice(false);
++    } catch (error) {
++      console.error('Voice command processing failed:', error);
++      setIsProcessingVoice(false);
++    }
++  };
+```
+
+**Commit Message**: `feat(calendar): integrate voice command processing for event creation`
+
 ## Success Criteria
 
 ### MVP Features

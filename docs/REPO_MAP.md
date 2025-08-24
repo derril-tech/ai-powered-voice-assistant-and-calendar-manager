@@ -333,7 +333,16 @@ OpenAI/Claude/LangChain
 - UI/UX requirements and patterns
 - Claude Code integration instructions
 
-### 4. **README.md** (Main)
+### 4. **CLAUDE.md** ⭐ **SINGLE SOURCE OF TRUTH**
+- **Location**: `docs/CLAUDE.md` - Complete Claude Code development guide
+- 80/20 development strategy and responsibilities
+- Infrastructure team vs Claude Code tasks
+- Implementation roadmap and success criteria
+- AI/ML framework architecture and implementation
+- Development guidelines and best practices
+- Failure-mode playbook and troubleshooting
+
+### 5. **README.md** (Main)
 - Project overview and features
 - Quick start guide
 - Deployment instructions

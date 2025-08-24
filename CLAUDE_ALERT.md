@@ -74,7 +74,7 @@ The infrastructure is technically complete according to the 8-step plan, but it'
 
 - `docs/PRODUCT_BRIEF.md` — Complete product vision and requirements
 - `docs/INFRASTRUCTURE_ALIGNMENT_AUDIT.md` — Detailed gap analysis
-- `docs/CLAUDE.md` — Updated with alignment issues
+- `docs/CLAUDE.md` — ⭐ **SINGLE SOURCE OF TRUTH** - Complete Claude Code development guide
 - `docs/PROMPT_DECLARATION.md` — Updated with product vision
 - `BASELINE.md` — Updated with alignment status
 

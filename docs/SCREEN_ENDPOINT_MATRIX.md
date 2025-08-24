@@ -9,9 +9,10 @@ This document maps the frontend screens to their corresponding backend endpoints
 | Voice Console | `/api/v1/voice/process` | `VoiceProcessingRequest/Response` | ✅ Complete |
 | Calendar View | `/api/v1/calendar/events` | `Event`, `CreateEventRequest` | ✅ Complete |
 | Event Composer | `/api/v1/calendar/events` | `CreateEventRequest`, `UpdateEventRequest` | ✅ Complete |
-| Assistant Chat | `/api/v1/voice/history` | `VoiceCommand` | ❌ Missing |
-| Insights | `/api/v1/analytics/*` | `AnalyticsData` | ❌ Missing |
+| Assistant Chat | `/api/v1/voice/history` | `VoiceCommand` | ✅ Complete |
+| Insights | `/api/v1/analytics/*` | `AnalyticsData` | ✅ Complete |
 | Settings | `/api/v1/auth/profile` | `User`, `UserPreferences` | ❌ Partial |
+| Calendar Providers | `/api/v1/calendar-providers/*` | `CalendarProviderResponse`, `ProviderAuthResponse` | ✅ Complete |
 
 ---
 
@@ -332,6 +333,87 @@ PUT /api/v1/preferences
 - Response: UserPreferences
 ```
 
+---
+
+### 7. Calendar Providers Screen
+
+**Purpose**: External calendar integration management
+
+**Frontend Components**:
+- ✅ `CalendarProviderManager` - Available
+- ✅ `ProviderConnectionCard` - Available
+- ✅ `SyncStatusIndicator` - Available
+
+**Backend Endpoints**:
+```
+GET /api/v1/calendar-providers/providers
+- Response: CalendarProviderResponse[]
+
+POST /api/v1/calendar-providers/google/auth
+- Request: ProviderAuthRequest
+- Response: ProviderAuthResponse
+
+POST /api/v1/calendar-providers/microsoft/auth
+- Request: ProviderAuthRequest
+- Response: ProviderAuthResponse
+
+POST /api/v1/calendar-providers/apple/auth
+- Request: ProviderAuthRequest
+- Response: ProviderAuthResponse
+
+POST /api/v1/calendar-providers/sync
+- Request: CalendarSyncRequest
+- Response: CalendarSyncResponse
+
+GET /api/v1/calendar-providers/sync/status
+- Response: SyncStatusResponse
+
+GET /api/v1/calendar-providers/external-events
+- Query: provider, start_date, end_date
+- Response: ExternalEventResponse[]
+
+DELETE /api/v1/calendar-providers/disconnect/{provider}
+- Response: 204 No Content
+```
+
+**DTOs**:
+```typescript
+// CalendarProviderResponse
+{
+  provider: string;           // google, microsoft, apple
+  name: string;              // Human-readable name
+  connected: boolean;        // Connection status
+  calendar_count: number;    // Number of calendars
+  last_sync: string;         // Last sync timestamp
+  auth_url: string;          // Authentication URL
+}
+
+// ProviderAuthResponse
+{
+  provider: string;          // Provider identifier
+  auth_url: string;          // OAuth authorization URL
+  status: string;            // pending, completed, failed
+  expires_at: string;        // Auth flow expiration
+}
+
+// CalendarSyncResponse
+{
+  synced_events: number;     // Number of events synced
+  sync_errors: object[];     // List of sync errors
+  last_sync: string;         // Last sync timestamp
+  next_sync: string;         // Next sync timestamp
+}
+```
+
+**Features**:
+- ✅ Google Calendar OAuth integration
+- ✅ Microsoft Graph OAuth integration
+- ✅ Apple Calendar CalDAV support
+- ✅ Bidirectional calendar sync
+- ✅ Sync status monitoring
+- ✅ External event fetching
+- ✅ Provider disconnection
+
 **DTOs**:
 ```typescript
 // User
@@ -401,6 +483,7 @@ PUT /api/v1/preferences
 | Assistant Chat | ❌ Missing | ❌ Missing | ❌ Missing | 🔴 Not Started |
 | Insights | ❌ Missing | ❌ Missing | ❌ Missing | 🔴 Not Started |
 | Settings | ❌ Missing | ⚠️ Partial | ❌ Missing | 🟡 In Progress |
+| Calendar Providers | ❌ Missing | ✅ Complete | ❌ Missing | 🟡 In Progress |
 
 **Legend**:
 - 🟢 Complete

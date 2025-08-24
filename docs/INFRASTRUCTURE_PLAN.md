@@ -48,7 +48,8 @@ Create a **deep scaffold** for both frontend and backend so Claude can recognize
 **Checklist**
 - [ ] Frontend scaffold built  
 - [ ] Backend scaffold built  
-- [ ] Docs folder created with drafts  
+- [ ] Docs folder created with drafts 
+- [ ] Docs folder MUST Include `REPO_MAP.md`, `API_SPEC.md`, and a draft `CLAUDE.md` if it's not already there 
 - [ ] TODO markers and `_INSTRUCTIONS.md` stubs in place  
 - [ ] Workspaces configured at root  
 - [ ] Devcontainer runs `pnpm i && pnpm dev`  
